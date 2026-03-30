@@ -262,7 +262,7 @@
       wait_for:
         host: 127.0.0.1
         port: "{{ app_port }}"
-        delay: 10
+        delay: 15
         timeout: 120
         state: started
       ignore_errors: yes
@@ -279,6 +279,19 @@
     - name: Show PM2 logs
       debug:
         msg: "{{ pm2_logs.stdout_lines | default(['No logs captured']) }}"
+      when: port_wait is failed
+
+    - name: Get PM2 process list for diagnostics
+      shell: pm2 list
+      register: pm2_list
+      when: port_wait is failed
+      become: yes
+      become_user: ubuntu
+      changed_when: false
+
+    - name: Show PM2 process list
+      debug:
+        msg: "{{ pm2_list.stdout_lines | default(['No PM2 list captured']) }}"
       when: port_wait is failed
 
     - name: Fail if app did not start
